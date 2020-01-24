@@ -25,7 +25,7 @@ const char* ssid     = "Tigerots";        // XXXXXX -- 使用时请修改为当�
 const char* password = "9955995599";      // XXXXXX -- 使用时请修改为当前你的 wifi 密码
 const char* host = "api.seniverse.com";
 const char* APIKEY = "wcmquevztdy1jpca";  //API KEY
-const char* city = "beijing";
+const char* city = "guangzhou";
 const char* language = "zh-Hans";         //zh-Hans 简体中文  会显示乱码
   
 const unsigned long BAUD_RATE = 115200;   // serial connection speed
@@ -78,30 +78,33 @@ void loop()
     //判断tcp client是否处于连接状态，不是就建立连接
     while (!client.connected())
     {
-        DebugPrintln("step 1");
-       if (!client.connect(host, 80))
-       {
-            led_sta = 1;
+        if (!client.connect(host, 80))
+        {
             DebugPrintln("connection....");
             delay(500);
-       }
+        }
+        DebugPrintln("tig_log: tcp连接成功");
     }
-    DebugPrintln("step 2");
-    led_sta = 2;
     //发送http请求 并且跳过响应头 直接获取响应body
-    if (sendRequest(host, city, APIKEY) && skipResponseHeaders()) 
+    if (sendRequest(host, city, APIKEY) ) 
     {
-        //清除缓冲
-        clrEsp8266ResponseBuffer();
-        //读取响应数据
-        readReponseContent(response, sizeof(response));
-        WeatherData weatherData;
-        if (parseUserData(response, &weatherData)) 
+        DebugPrintln("tig_log: 发送指令");
+        delay(1000);
+        
+        if(skipResponseHeaders())
         {
-            printUserData(&weatherData);
+            //清除缓冲
+            clrEsp8266ResponseBuffer();
+            //读取响应数据
+            readReponseContent(response, sizeof(response));
+            WeatherData weatherData;
+            if (parseUserData(response, &weatherData)) 
+            {
+                printUserData(&weatherData);
+            }
         }
     }
-    delay(5000);//每5s调用一次
+    delay(10000);//每5s调用一次
 }
 
 
@@ -216,6 +219,7 @@ bool sendRequest(const char* host, const char* cityid, const char* apiKey) {
   client.print(String("GET ") + GetUrl + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
                "Connection: close\r\n\r\n");
+  
   DebugPrintln("create a request:");
   DebugPrintln(String("GET ") + GetUrl + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
@@ -227,23 +231,37 @@ bool sendRequest(const char* host, const char* cityid, const char* apiKey) {
 /**
 * @Desc 跳过 HTTP 头，使我们在响应正文的开头
 */
-bool skipResponseHeaders() {
-  // HTTP headers end with an empty line
-  bool ok = client.find(endOfHeaders);
-  if (!ok) {
-    DebugPrintln("No response or invalid response!");
-  }
-  return ok;
+bool skipResponseHeaders() 
+{
+    // HTTP headers end with an empty line
+    bool ok = client.find(endOfHeaders);
+    if (!ok) 
+    {
+        DebugPrintln("No response or invalid response!");
+    }
+    DebugPrintln("tig_log: 收到结尾");
+    return ok;
 }
   
 /**
 * @Desc 从HTTP服务器响应中读取正文
 */
-void readReponseContent(char* content, size_t maxSize) {
-  size_t length = client.readBytes(content, maxSize);
+void readReponseContent(char* content, size_t maxSize) 
+{
+  int rxcnt = 0;
+  size_t len = 0;
+  
+  rxcnt = client.available();
+  DebugPrint("tig_log: 可读字节数");
+  DebugPrintln(rxcnt);
+  if(rxcnt < maxSize)
+  {
+    len = client.readBytes(content, rxcnt);//此处如果读取字节数rxcnt大于实际返回数,会阻塞
+  }
+  
   delay(100);
   DebugPrintln("Get the data from Internet!");
-  content[length] = 0;
+  content[len] = 0;
   DebugPrintln(content);
   DebugPrintln("Read data Over!");
   client.flush();//清除一下缓冲
@@ -284,7 +302,8 @@ bool parseUserData(char* content, struct WeatherData* weatherData) {
    
   JsonObject& root = jsonBuffer.parseObject(content);
    
-  if (!root.success()) {
+  if (!root.success()) 
+  {
     DebugPrintln("JSON parsing failed!");
     return false;
   }
@@ -304,14 +323,14 @@ void printUserData(const struct WeatherData* weatherData) {
   DebugPrintln("Print parsed data :");
   DebugPrint("City : ");
   DebugPrint(weatherData->city);
-  DebugPrint(", \t");
+  DebugPrint(", \r\n");
   DebugPrint("Weather : ");
   DebugPrint(weatherData->weather);
-  DebugPrint(",\t");
+  DebugPrint(", \r\n");
   DebugPrint("Temp : ");
   DebugPrint(weatherData->temp);
   DebugPrint(" C");
-  DebugPrint(",\t");
+  DebugPrint(",\r\n");
   DebugPrint("Last Updata : ");
   DebugPrint(weatherData->udate);
   DebugPrintln("\r\n");
