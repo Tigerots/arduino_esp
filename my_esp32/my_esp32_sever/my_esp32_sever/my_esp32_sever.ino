@@ -14,21 +14,22 @@ const char* password = "9955995599";//wifi密码 这里需要修改
 WiFiServer server(80);
  
 void setup(){
-  Serial.begin(115200);
-  Serial.println();
- 
-  Serial.printf("Connecting to %s ", ssid);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED){
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println(" connected");
-  //启动TCP 连接
-  server.begin();
-  //打印TCP server IP地址
-  Serial.printf("Web server started, open %s in a web browser\n", WiFi.localIP().toString().c_str());
+    Serial.begin(115200);
+    Serial.println();
+  
+    Serial.printf("Connecting to %s ", ssid);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println(" connected");
+    //启动TCP 连接
+    server.begin();
+    //打印TCP server IP地址
+    Serial.printf("Web server started, open %s in a web browser\n", WiFi.localIP().toString().c_str());
 }
  
 /**
