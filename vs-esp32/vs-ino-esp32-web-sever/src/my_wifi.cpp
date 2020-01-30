@@ -17,7 +17,7 @@ const char* ssid = "Tigerots";//wifi账号 这里需要修改
 const char* password = "9955995599";//wifi密码 这里需要修改
 
 //创建 tcp server 端口号是80, 最大4个客户端
-WiFiServer server(9000);
+WiFiServer server(80);
 WiFiServer serverClients[4];
 
 /**
@@ -73,7 +73,16 @@ void my_web_sever_loop(void)
 	}
 }
 
-
+/*  wifi  status: 
+	255：WL_NO_SHIELD不用在意（兼容WiFi Shield而设计）
+	0：WL_IDLE_STATUS正在WiFi工作模式间切换；
+	1：WL_NO_SSID_AVAIL无法访问设置的SSID网络；
+	2：WL_SCAN_COMPLETED扫描完成；
+	3：WL_CONNECTED连接成功；
+	4：WL_CONNECT_FAILED连接失败；
+	5：WL_CONNECTION_LOST丢失连接；
+	6：WL_DISCONNECTED断开连接；
+*/
 void my_wifi_init(void)
 {
 	Serial.println();
@@ -85,12 +94,21 @@ void my_wifi_init(void)
 		delay(500);
 		Serial.print(".");
 	}
+	delay(1000);
 	Serial.println();
-	Serial.println("Wifi is connected !");
+	Serial.println("=== Wifi is connected : ===");
+	Serial.print("wifi  status: ");
+	Serial.println(WiFi.status());
 	Serial.print("localIP address: ");
 	Serial.println(WiFi.localIP());
+	Serial.print("gatewayIP  address: ");
+	Serial.println(WiFi.gatewayIP());
+	Serial.print("subnetMask  address: ");
+	Serial.println(WiFi.subnetMask());
+	Serial.print("dnsIP  address: ");
+	Serial.println(WiFi.dnsIP());
+	Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
 	Serial.println();
-
 	//启动TCP 连接
 	server.begin();
 	//关闭小包合并包功能，不会延时发送数据
