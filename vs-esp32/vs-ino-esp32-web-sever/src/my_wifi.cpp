@@ -1,17 +1,24 @@
 
-/**
- * Demo：
- *    演示web Server功能
- *    打开PC浏览器 输入IP地址。请求web server
- * @author Tigerots
- * @date 2020/01/29
- */
+/**************************** (C) COPYRIGHT 2020 ****************************
+* 设计师:   Tigerots
+* 创建时间: 2020.02
+* 功能描述: 
+*       
+*****************************************************************************
+* ********************************修改历史记录********************************
+* 修改时间: 
+* 版本号:
+* 修改内容:
+*****************************************************************************/
+#define	 __MY_WIFI_APP
 
 #include <WiFi.h>
 #include <Arduino.h>
 
 #include <my_led.h>
 #include <my_serial.h>
+#include <my_html.h>
+
 
 const char* ssid = "Tigerots";//wifi账号 这里需要修改
 const char* password = "9955995599";//wifi密码 这里需要修改
@@ -27,20 +34,25 @@ WiFiServer serverClients[4];
  */
 String prepareHtmlPage()
 {
+	String  index_page = read_page();
+
 	String htmlPage =
 		String("HTTP/1.1 200 OK\r\n") +
 			"Content-Type: text/html\r\n" +
-			"Connection: close\r\n" +  // the connection will be closed after completion of the response
-			"Refresh: 5\r\n" +  // refresh the page automatically every 5 sec
+			"Connection: close\r\n" + 
+			"Refresh: 20\r\n" +  
 			"\r\n" +
-			"<!DOCTYPE HTML>" +
-			"<html>" +
-			"Analog input:  " + String(analogRead(A0)) +
-			"</html>" +
+			index_page +
 			"\r\n";
+	
 	return htmlPage;
 }
 
+/****************************************************************************
+* 编写作者: Tigerots
+* 创建时间: 2020.02
+* 功能描述: web 服务器循环执行函数
+*****************************************************************************/
 void my_web_sever_loop(void)
 {
 	WiFiClient client = server.available();
@@ -73,16 +85,27 @@ void my_web_sever_loop(void)
 	}
 }
 
-/*  wifi  status: 
-	255：WL_NO_SHIELD不用在意（兼容WiFi Shield而设计）
-	0：WL_IDLE_STATUS正在WiFi工作模式间切换；
-	1：WL_NO_SSID_AVAIL无法访问设置的SSID网络；
-	2：WL_SCAN_COMPLETED扫描完成；
-	3：WL_CONNECTED连接成功；
-	4：WL_CONNECT_FAILED连接失败；
-	5：WL_CONNECTION_LOST丢失连接；
-	6：WL_DISCONNECTED断开连接；
-*/
+
+/****************************************************************************
+* 编写作者: Tigerots
+* 创建时间: 2020.02
+* 功能描述: 
+			1. 初始化串口(打印数据)
+			2. 初始化wifi
+			3. 初始化TCP,监听端口
+* 入口参数:
+* 出口参数:
+		wifi  status 说明: 
+		255：WL_NO_SHIELD不用在意（兼容WiFi Shield而设计）
+		0：WL_IDLE_STATUS正在WiFi工作模式间切换；
+		1：WL_NO_SSID_AVAIL无法访问设置的SSID网络；
+		2：WL_SCAN_COMPLETED扫描完成；
+		3：WL_CONNECTED连接成功；
+		4：WL_CONNECT_FAILED连接失败；
+		5：WL_CONNECTION_LOST丢失连接；
+		6：WL_DISCONNECTED断开连接；
+* 修改记录:
+*****************************************************************************/
 void my_wifi_init(void)
 {
 	Serial.println();
@@ -96,7 +119,7 @@ void my_wifi_init(void)
 	}
 	delay(1000);
 	Serial.println();
-	Serial.println("=== Wifi is connected : ===");
+	Serial.println("=== Wifi is connected ! ===");
 	Serial.print("wifi  status: ");
 	Serial.println(WiFi.status());
 	Serial.print("localIP address: ");
@@ -114,8 +137,47 @@ void my_wifi_init(void)
 	//关闭小包合并包功能，不会延时发送数据
 	server.setNoDelay(true);
 	//打印TCP server IP地址
-	Serial.printf("Web server started, open %s in a web browser\n", WiFi.localIP().toString().c_str());
+	Serial.printf("=== Web server started, open %s in a web browser ! ===\r\n\r\n", WiFi.localIP().toString().c_str());
+	delay(1000);
 }
+/****************************************************************************
+* 编写作者: Tigerots
+* 创建时间: 2020.02
+* 功能描述: 
+			1. 初始化串口(打印数据)
+			2. 使用微信或者APP自动配网
+*****************************************************************************/
+void my_smartconfig(void) 
+{
+	Serial.begin(115200);
 
+	//Init WiFi as Station, start SmartConfig
+	WiFi.mode(WIFI_AP_STA);
+	WiFi.beginSmartConfig();
+
+	//Wait for SmartConfig packet from mobile
+	Serial.println("Waiting for SmartConfig.");
+	while (!WiFi.smartConfigDone()) 
+	{
+		delay(500);
+		Serial.print(".");
+	}
+
+	Serial.println("");
+	Serial.println("SmartConfig received.");
+
+	//Wait for WiFi to connect to AP
+	Serial.println("Waiting for WiFi");
+	while (WiFi.status() != WL_CONNECTED) 
+	{
+		delay(500);
+		Serial.print(".");
+	}
+
+	Serial.println("WiFi Connected.");
+
+	Serial.print("IP Address: ");
+	Serial.println(WiFi.localIP());
+}
 
 
