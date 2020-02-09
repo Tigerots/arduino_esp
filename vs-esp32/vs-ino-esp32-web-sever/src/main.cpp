@@ -37,8 +37,8 @@ void setup()
 	my_seial_init(115200);//串口初始化
 	my_smartconfig();//自动配网,可以使用安信可微信公众号
 	my_wifi_init();//连接到wifi
-	my_spiffs_init();//spifs初始化,第一次使用会格式化
-	my_spiffs_sample();//SPIFS测试
+	//my_spiffs_init();//spifs初始化,第一次使用会格式化
+	//my_spiffs_sample();//SPIFS测试
 }
 
 /* ======================================================================
